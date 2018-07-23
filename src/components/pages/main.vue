@@ -1,16 +1,20 @@
 <template>
   <div class="main">
-    <Header
-      :title="title"
-      :href="href"
-      :jumpState="jumpState"
-      :alert="alert"
-      @child="warning"
-    />
+    <!--<Header-->
+    <!--:title="title"-->
+    <!--:href="href"-->
+    <!--:jumpState="jumpState"-->
+    <!--:alert="alert"-->
+    <!--@child="warning"-->
+    <!--/>-->
     <div class="main-content">
 
       <div class="action flex">
-        <div class="user">欢迎回来，{{userInfo.NAME}}</div>
+
+        <div class="user">
+          <div> 您好，{{userInfo.NAME}}</div>
+          <div class="time">{{date}}</div>
+        </div>
         <div class="tabber flex">
           <div class="tab-item" :class="[current==0?'active':'']" @click="toggleTab(0)">积分</div>
           <div class="tab-item" :class="[current==1?'active':'']" @click="toggleTab(1)">排行榜</div>
@@ -21,21 +25,32 @@
         <!--积分-->
         <div class="tab-ctx" v-if="!current">
           <div class="bg">
-            <div class="bg-pos">
-              <!--<WaterPolo :num="num" v-if="state"/>-->
-              <span>{{userInfo.INTEGRAL}}</span>
+            <div class="bg-pos" @click="jump">
+              <h2>总积分</h2>
+              <h1>{{userInfo.INTEGRAL?userInfo.INTEGRAL:0}}</h1>
+              <div><img src="../../assets/sb.png" alt=""></div>
             </div>
           </div>
+          <!--
+                    <div class="bg">
+                      <div class="bg-pos" @click="jump">
+                        &lt;!&ndash;<WaterPolo :num="num" v-if="state"/>&ndash;&gt;
+                        <span>{{userInfo.INTEGRAL}}</span>
+                      </div>
+                    </div>
+          -->
         </div>
         <!--排名-->
         <div class="tab-ctx" v-if="current">
           <div class="wrapper-header flex">
+            <div class="grid-header">序号</div>
             <div class="grid-header">排名</div>
             <div class="grid-header">姓名</div>
             <div class="grid-header">处室</div>
             <div class="grid-header">积分</div>
           </div>
           <div class="wrapper-content active flex" v-if="userRanking&&my">
+            <div class="grid-item">{{userRanking.ROWNO}}</div>
             <div class="grid-item">{{userRanking.ROWNO}}</div>
             <div class="grid-item">{{userRanking.NAME}}</div>
             <div class="grid-item">{{userRanking.ACADEMY}}</div>
@@ -53,9 +68,11 @@
               <div id="wrapper-list" class="wrapper-list">
 
                 <!--item-->
-                <div class="wrapper-content flex" v-for="(val,index) in rankingList"
+                <div class="wrapper-content flex"
+                     v-for="(val,index) in rankingList"
                      :class="[val.hasClass?'active':'']">
                   <div class="grid-item">{{index+1}}</div>
+                  <div class="grid-item">{{val.ranking}}</div>
                   <div class="grid-item">{{val.NAME}}</div>
                   <div class="grid-item">{{val.ACADEMY}}</div>
                   <div class="grid-item">{{val.INTEGRAL}}</div>
@@ -94,7 +111,7 @@
 
       <div class="btn-group">
         <button class="btn start" @click="goLink('start')">开始答题</button>
-        <button class="btn read" @click="goLink('read')">查看题库</button>
+        <!--<button class="btn read" @click="goLink('read')">查看题库</button>-->
       </div>
     </div>
     <!--loading-->
@@ -107,7 +124,11 @@
   import Loading from '../common/Loading';
   import WaterPolo from '../common/WaterPolo';
   import {request} from '../../api/common';
+  import {times} from '../../api/time';
+  import {__GlobalInfo} from "../../api/config";
+
   import $ from 'jquery';
+  import {__BASE64} from '../../api/base64'
 
   export default {
     name: 'Main',
@@ -128,6 +149,7 @@
         num: 40,
         score: 80,
         userInfo: {},
+        user_name: '',
         user_id: '',
         loading: false,
         rankingList: [],//排行集合
@@ -138,18 +160,19 @@
         loadList: true,
         h: '',
         my: true,
+        date: '',
       }
     },
     beforeRouteEnter(to, from, next) {
       console.log(to);
       console.log(from);
       next(vm => {
-        if (!vm.global.isLogin) {
+        /*if (!vm.global.isLogin) {
           // console.log(vm.$router);
           // vm.$router.push({path: "login"});
         } else {
           // next();
-        }
+        }*/
         next();
       });
     },
@@ -170,7 +193,6 @@
       };
 
       if (to.path == "/login" && this.global.isLogin) {
-        console.log(this.global.isLogin);
         this.global.isLogin = false;
         // next();
         // this.$router.push({ path: "login" });
@@ -180,14 +202,25 @@
       }
     },
     created: function () {
-      console.log(this.$route.query)
-      if(!this.$route.query.user_id){
-        mui.alert('服务器繁忙', '', '返回', ()=>{
-          this.$router.go(-1);
+      this.date = times();
+      // if(!this.$route.query.user_id){
+      //   mui.alert('服务器繁忙', '', '返回', ()=>{
+      //     this.$router.go(-1);
+      //   }, 'div');
+      // }
+      if (this.$route.query.user_id) {
+        this.user_id = this.$route.query.user_id;
+      }
+      else {
+        mui.alert('用户不存在,请联系管理员', '', '返回', () => {
+          window.opener = null;
+          window.open('', '_self');
+          window.close();
+
+          // this.$router.go(-1)
         }, 'div');
       }
-      this.user_id = this.$route.query.user_id;
-      console.log(this.user_id)
+
       // this.user_id = '111111';
       this.PAGESTART = -1;
       this.postLogin();
@@ -196,15 +229,17 @@
     },
     mounted: function () {
       var htmlFS = $('html').css('fontSize').replace('px', '');
-      console.log(htmlFS)
       this.h = ((this.PAGECOUNT * this.rankingItemH) / 2 / htmlFS) + 'rem';
       $('.scroller-con').css('height', this.h)
       // $('._v-container').css('height', this.h + 'rem')
-      console.log(history)
     },
     methods: {
+      jump() {
+        this.$router.push({name: 'Detail', params: {user_id: this.user_id}});
+      },
       postLogin() {
         // this.loading = true;
+
         request.getServerData(
           {
             user_id: this.user_id,
@@ -215,9 +250,28 @@
             console.log(result)
             if (result.userInfo) {
               this.userInfo = result.userInfo;
+              this.user_name = result.userInfo.NAME;
+              sessionStorage.setItem(__GlobalInfo.sessionKey.userInfo,JSON.stringify(result.userInfo));
             }
           });
       },
+      // postLogin() {
+      //   alert('请求前')
+      //   // this.loading = true;
+      //   request.getServerData(
+      //     {
+      //       user_id: this.user_id,
+      //     },
+      //     "onlineExamination.action.examinationAction[getUserInfo]",
+      //     true,
+      //     (result) => {
+      //       alert(JSON.stringify(result))
+      //       console.log(result)
+      //       if (result.userInfo) {
+      //         this.userInfo = result.userInfo;
+      //       }
+      //     });
+      // },
       warning() {
         var self = this;
         this.$router.push({path: 'login'});
@@ -266,48 +320,92 @@
 
               if (this.PAGESTART) {
                 if (result.rankingList.length) {//如果是数组//一条以上是数组
-                  result.rankingList.map(val => {
-                    if (val.ID == result.userRanking.ID) {
-                      val.hasClass = 1;
+                  for (var i = 0, rankingList = result.rankingList; i < rankingList.length; i++) {
+                    if (result.userRanking) {
+                      if (rankingList[i].ID == result.userRanking.ID) {
+                        rankingList[i].hasClass = 1;
+                        this.my = false;
+                      }
+                      else {
+                        rankingList[i].hasClass = 0;
+                      }
+                    }
+                    this.rankingList.push(rankingList[i]);
+                  }
+                }
+                else {//否则是对象//一条数据是对象
+                  if (result.userRanking) {
+                    if (result.rankingList.ID == result.userRanking.ID) {
+                      result.rankingList.hasClass = 1;
                       this.my = false;
                     }
                     else {
-                      val.hasClass = 0;
+                      result.rankingList.hasClass = 0;
                     }
-                    this.rankingList.push(val);
-                  });
-                }
-
-                else {//否则是对象//一条数据是对象
-                  if (val.ID == result.userRanking.ID) {
-                    result.rankingList.hasClass = 1;
-                    this.my = false;
+                    this.rankingList.push(result.rankingList);
                   }
-                  else {
-                    result.rankingList.hasClass = 0;
-                  }
-
-                  this.rankingList.push(result.rankingList);
                 }
-
               }
               else {
                 this.userRanking = result.userRanking;
-                result.rankingList.map(val => {
-                  if (val.ID == result.userRanking.ID) {
-                    val.hasClass = 1;
+                for (var i = 0, rankingList = result.rankingList; i < rankingList.length; i++) {
+                  if (result.userRanking) {
+                    if (rankingList[i].ID == result.userRanking.ID) {
+                      rankingList[i].hasClass = 1;
+                      this.my = false;
+                    }
+                    else {
+                      rankingList[i].hasClass = 0;
+                    }
+
+                    if (i) {
+                      if (rankingList[i].INTEGRAL == rankingList[i - 1].INTEGRAL) {
+                        rankingList[i].ranking = rankingList[i - 1].ranking;
+                      }
+                      else {
+                        rankingList[i].ranking = (rankingList[i - 1].ranking) + 1;
+                      }
+                    }
+                    else {
+                      rankingList[i].ranking = i + 1;
+                    }
+
+                  }
+                  else {
+                    this.my = false;
+                  }
+                }
+                this.rankingList = rankingList;
+              }
+              for (var i = 0, rankingList = this.rankingList; i < rankingList.length; i++) {
+                if (result.userRanking) {
+                  if (rankingList[i].ID == result.userRanking.ID) {
+                    rankingList[i].hasClass = 1;
                     this.my = false;
                   }
                   else {
-                    val.hasClass = 0;
+                    rankingList[i].hasClass = 0;
                   }
-                });
-                this.rankingList = result.rankingList;
+                  if (i) {
+                    if (rankingList[i].INTEGRAL == rankingList[i - 1].INTEGRAL) {
+                      rankingList[i].ranking = rankingList[i - 1].ranking;
+                    }
+                    else {
+                      rankingList[i].ranking = (rankingList[i - 1].ranking) + 1;
+                    }
+                  }
+                  else {
+                    rankingList[i].ranking = i + 1;
+                  }
+                }
+                else {
+                  this.my = false;
+                }
               }
               fn();
             }
-
             else {
+              this.my = false;
               this.loadList = false;
               fn(true);
             }
@@ -315,9 +413,6 @@
 
             // this.loading = false;
           });
-      },
-      toLink() {
-
       },
       toggleTab(e) {
         console.log(e)
@@ -332,8 +427,9 @@
           this.$router.push({
             name: 'Answer',
             params: {
-              user_id: 111111,
-              // user_id:this.user_id,
+              // user_id: 111111,
+              user_id: this.user_id,
+              user_name: this.user_name
             }
             // query: {
             //   user_id: this.user_id,
@@ -343,9 +439,9 @@
           });
 
         }
-        else {
-          this.$router.push({path: 'readAnswer'});
-        }
+        // else {
+        //   this.$router.push({path: 'pdf'});
+        // }
       }
     }
   }
@@ -374,7 +470,7 @@
   .main {
     height: @max;
     .main-content {
-      padding-top: 88px;
+      /*padding-top: 88px;*/
       box-sizing: border-box;
       height: @max;
       background: linear-gradient(@white, #e5e5e5);
@@ -385,12 +481,15 @@
         box-sizing: border-box;
         .user {
           font-size: 27px;
-          line-height: 70px;
+          /*line-height: 70px;*/
           color: #626262;
           flex-grow: 2;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          .time {
+            font-size: 34px;
+          }
         }
         .tabber {
           .tab-item {
@@ -424,7 +523,7 @@
         padding: 0 24px;
         box-sizing: border-box;
         .tab-ctx {
-          .bg {
+          /*.bg {
             width: @max;
 
             .bg-pos {
@@ -439,6 +538,33 @@
                 line-height: 630px;
                 font-size: 150px;
                 color: @white;
+              }
+            }
+          }*/
+          .bg {
+            width: @max;
+
+            .bg-pos {
+              width: 630px;
+              height: 630px;
+              margin: 0 auto;
+              text-align: center;
+              h2 {
+                padding-top: 139px;
+                padding-bottom: 86px;
+                font-size: 78px;
+                color: #8b8b8b;
+              }
+              h1 {
+                font-size: 156px;
+                color: #8b8b8b;
+                font-weight: 300;
+                font-family: "Times New Roman";
+
+              }
+              img {
+                width: 336px;
+                height: 174px;
               }
             }
           }
@@ -458,17 +584,20 @@
               box-sizing: border-box;
             }
             .grid-header:first-child {
-              width: 98px;
+              width: 78px;
               border-top-left-radius: 3px; /*no*/
             }
             .grid-header:nth-child(2) {
-              width: 148px;
+              width: 78px;
             }
             .grid-header:nth-child(3) {
-              width: 313px;
+              width: 176.5px;
+            }
+            .grid-header:nth-child(4) {
+              width: 246.5px;
             }
             .grid-header:last-child {
-              width: 138px;
+              width: 118px;
               border-top-right-radius: 3px; /*no*/
             }
           }
@@ -503,16 +632,19 @@
               box-sizing: border-box;
             }
             .grid-item:first-child {
-              width: 98px;
+              width: 78px;
             }
             .grid-item:nth-child(2) {
-              width: 148px;
+              width: 78px;
             }
             .grid-item:nth-child(3) {
-              width: 313px;
+              width: 176.5px;
+            }
+            .grid-item:nth-child(4) {
+              width: 246.5px;
             }
             .grid-item:last-child {
-              width: 138px;
+              width: 118px;
             }
           }
           /*.wrapper-content {

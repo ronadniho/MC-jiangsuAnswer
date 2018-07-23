@@ -27,10 +27,6 @@ export const _post = (req) => {
 
 import $ from 'jquery';
 import config from '../../config/config'
-console.log('------------1---------')
-console.log(config.config.productUrl)
-console.log('------------2---------')
-console.log(process.env.NODE_ENV)
 export default {
   request: function getServerData(obj, url, async,callback) {
     console.log(url)

@@ -75,14 +75,26 @@ export const router = new Router({
     //   meta: {allowBack: false}
     // },
     {
+      path: '/pdf',
+      name: 'Pdf',
+      component: resolve => require(['@/components/pages/Pdf'], resolve),
+    },
+/*
+    {
       path: '/readAnswer',
       name: 'ReadAnswer',
       component: resolve => require(['@/components/pages/ReadAnswer'], resolve),
     },
+*/
     {
       path: '/main',
       name: 'Main',
       component: resolve => require(['@/components/pages/Main'], resolve),
+    },
+    {
+      path: '/detail/:user_id',
+      name: 'Detail',
+      component: resolve => require(['@/components/pages/Detail'], resolve),
     },
     // {
     //   path: '/register',
@@ -95,7 +107,7 @@ export const router = new Router({
       component: resolve => require(['@/components/pages/AnswerList'], resolve)
     },
     {
-      path: '/answer/:user_id',
+      path: '/answer/:user_id/:user_name',
       name: 'Answer',
       component: resolve => require(['@/components/pages/Answer'], resolve),
     },

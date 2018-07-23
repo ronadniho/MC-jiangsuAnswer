@@ -755,7 +755,6 @@ function getDynamicServerData(obj, url, async, callback, requestFormat, response
   }
   var ajaxUrl = method.toLowerCase() == "post" ? __GlobalInfo.postUrl : __GlobalInfo.actionUrl;
   var data = null, error = null, url = '';
-  console.log(process.env.NODE_ENV)
   if (process.env.NODE_ENV != 'production') {
     url = `/ts${ajaxUrl}`;
   }
@@ -763,7 +762,28 @@ function getDynamicServerData(obj, url, async, callback, requestFormat, response
     console.log(configs.config.productUrls)
     url = `${configs.config.productUrls}${ajaxUrl}`
   }
-  console.log(url)
+  /*let date = new Date()
+  let timestamp = date.getTime();
+  console.log(timestamp)
+  console.log(`${url}?sagreqid=${timestamp}`)*/
+  // alert(window.sagJsHelper && window.sagJsHelper.interceptRequest && typeofwindow.sagJsHelper.interceptRequest === 'function')
+  if (window.sagJsHelper && window.sagJsHelper.interceptRequest && typeof window.sagJsHelper.interceptRequest === 'function') {
+    var date = new Date();
+    var timestamp = date.getTime();
+
+    // 添加sagreqid标识
+    // if (url.indexOf('?') > 0) {
+    //   config.url = config.url + "&sagreqid=" + timestamp;
+    // } else {
+    //   config.url = config.url + "?sagreqid=" + timestamp;
+    // }
+    url = `${url}?sagreqid=${timestamp}`
+    // 调用接口缓存POST请求的数据
+    window.sagJsHelper.interceptRequest('' + timestamp, "POST", requestStr, 'application/json');
+  }
+  // alert(window.sagJsHelper.interceptRequest)
+
+  // alert(url)
   $.ajax({
     url: url,
     dataType: "json",
@@ -789,7 +809,7 @@ function getDynamicServerData(obj, url, async, callback, requestFormat, response
         }
       }
     },
-    error: function (xmlhttp) {
+    error: function (xmlhttp, a, c) {
       error = "请求出错";
     }
   });
@@ -1938,3 +1958,39 @@ function sendMqInfo(QueueName, message) {
   getServerData({QueueName: QueueName, message: message}, "home/actions/sendMqInfo.xml", true, function () {
   });
 }
+
+
+/*function() {
+  "use strict";
+  angular.module("app")
+    .constant("serviceUrl", "http://172.80.72.15:8080/route/route?test=api"))
+.constant("serviceImgUrl", "http://172.80.72.15:8080/dc")
+  .factory('sagInterceptor', [function() {
+    return {
+      request: function(config) {
+        if (window.sagJsHelper&&window.sagJsHelper.interceptRequest&&typeofwindow.sagJsHelper.interceptRequest === 'function') {
+          if ("POST" == config.method) {
+            var date = new Date();
+            var timestamp = date.getTime();
+
+            // 添加sagreqid标识
+            varurl = config.url;
+            if (url.indexOf('?') > 0) {
+              config.url = config.url + "&sagreqid=" + timestamp;
+            } else {
+              config.url = config.url + "?sagreqid=" + timestamp;
+            }
+
+            // 调用接口缓存POST请求的数据
+            window.sagJsHelper.interceptRequest('' + timestamp, config.method, config.data, config.headers["Content-Type"]);
+          }
+        }
+
+        return config;
+      }
+    }
+  }])
+  .config(['$httpProvider', function($httpProvider) {
+    $httpProvider.interceptors.push('sagInterceptor');
+  }])
+}()*/

@@ -1,9 +1,9 @@
 <template>
   <div>
-    <Header
-      :title="title"
-      :href="href"
-    />
+    <!--<Header-->
+      <!--:title="title"-->
+      <!--:href="href"-->
+    <!--/>-->
     <!--看题-->
     <div class="container answer" v-if="layerToggle&&!message">
       <!--页码-->
@@ -18,12 +18,13 @@
             <span>题库</span>
           </a>
 
-          <a @click="signToggle" v-for="(item,index) in signList" v-if="index+1==page">
-            <img src="../../assets/sign.png" alt="">
-            <span>{{item.sign?'已标记':'标记'}}</span>
-          </a>
+          <!--<a @click="signToggle" v-for="(item,index) in signList" v-if="index+1==page">-->
+            <!--<img src="../../assets/sign.png" alt="">-->
+            <!--<span>{{item.sign?'已标记':'标记'}}</span>-->
+          <!--</a>-->
         </div>
       </div>
+
       <!--主内容-->
       <div class="content">
         <!--标题-->
@@ -34,7 +35,7 @@
         <div class="result">
           <!--item-->
           <div class="result-item" v-for="(item,index) in examlist" :key="index">
-            <div v-if="index+1==(page%basic==0?basic:page%basic)">
+            <div v-if="index+1==(page%basic==0?basic:page%basic)" style="width:100%;">
               <!--题目-->
 
               <div class="title">
@@ -52,6 +53,7 @@
                   />
                   <label :for="'radio'+item.ID+idx">{{child}}</label>
                 </div>
+
 
               </div><!--单选-->
 
@@ -83,25 +85,36 @@
               </div><!--判断-->
 
               <div class="tip">
+
                 <!--单选题或判断题提示-->
-                <span v-if="item.QUESTIONS_TYPE!=1">
-                <!--<span v-if="item.QUESTIONS_TYPE!=1&&item.ANSWER&&(item.ANSWER!=item.REFERENCE_ANSWER)">-->
-                  提示&nbsp;&nbsp;&nbsp;&nbsp;
-                  <b>{{item.PROMPT}}</b>
-                </span>
+                <div class="spans" v-if="item.QUESTIONS_TYPE!=1">
+                  <div @click="show(item)" class="flex flex-align-center">
+                    <span></span>
+                    <em>查看提示</em>
+                  </div>
+
+                  <b v-if="item.status">{{item.PROMPT}}</b>
+                </div>
+
+
                 <!--多选提示-->
-                <span v-if="item.QUESTIONS_TYPE==1">
-                <!--<span v-if="item.QUESTIONS_TYPE==1&&item.ANSWER.length&&(JSON.stringify(item.ANSWER)!=JSON.stringify(item.reference_answer))">-->
-                  提示&nbsp;&nbsp;&nbsp;&nbsp;
-                  <b>{{item.PROMPT}}</b>
-                </span>
+                <div class="spans" v-if="item.QUESTIONS_TYPE==1" >
+                  <div @click="show(item)" class="flex flex-align-center">
+                    <span></span>
+                    <em>查看提示</em>
+                  </div>
+
+                  <b v-if="item.status">{{item.PROMPT}}</b>
+                </div>
 
               </div>
+
             </div>
           </div>
         </div>
 
       </div>
+
       <!--控制器-->
       <div class="submit flex flex-justify-center">
         <div>
@@ -178,7 +191,6 @@
 
   </div>
 </template>
-
 <script>
   import Header from '../common/Header';
   import Loading from '../common/Loading';
@@ -203,8 +215,8 @@
         signList: [],
         totalPage: 0,//总页数
         index: 0,
-        basic: 10,//basic和PAGECOUNT初始化必须同步
-        PAGECOUNT: 10,
+        basic: 30,//basic和PAGECOUNT初始化必须同步
+        PAGECOUNT: 30,
         page: 1,//当前页码
         user_id: '',
         user_name: '',
@@ -238,6 +250,10 @@
       this.getClassExamlist();
     },
     methods: {
+      show(val){
+        console.log(val);
+        val.status = !val.status;
+      },
       getClassExamlist() {
         request.getServerData(
           {
@@ -249,8 +265,9 @@
           (result) => {
             this.loading = true;
             console.log(result)
+            console.log(result.examinationPaperList)
 
-            var signList = JSON.parse(localStorage.getItem('signList'));
+            /*var signList = JSON.parse(localStorage.getItem('signList'));
             if (signList) {
               this.signList = signList;
               this.total = signList.length;
@@ -285,13 +302,49 @@
               this.signList = signList;
               this.total = parseInt(result.singleSelectioncnt.singleSelectioncnt) + parseInt(result.multipleSelectioncnt.multipleSelectioncnt) + parseInt(result.judgeSelectioncnt.judgeSelectioncnt);
               localStorage.setItem('signList', JSON.stringify(signList));
+            }*/
+
+            var signList = [];//标记
+            var singleList = [];//单选
+            var multipleList = [];//多选
+            var judgeList = [];//判断
+            for (var i = 0; i < result.singleSelectioncnt.singleSelectioncnt; i++) {
+              singleList[i] = {
+                type: 'single',
+                sign: false,
+              };
+              signList.push(singleList[i])
             }
+            console.log(singleList)
+            for (var i = 0; i < result.multipleSelectioncnt.multipleSelectioncnt; i++) {
+              multipleList[i] = {
+                type: 'multiple',
+                sign: false,
+              };
+              signList.push(multipleList[i])
+            }
+            for (var i = 0; i < result.judgeSelectioncnt.judgeSelectioncnt; i++) {
+              judgeList[i] = {
+                type: 'judge',
+                sign: false,
+              };
+              signList.push(judgeList[i])
+            }
+            this.signList = signList;
+            this.total = parseInt(result.singleSelectioncnt.singleSelectioncnt) + parseInt(result.multipleSelectioncnt.multipleSelectioncnt) + parseInt(result.judgeSelectioncnt.judgeSelectioncnt);
+
             if (this.index) {
               console.log(this.index * this.basic);
+             result.examinationPaperList.map(val=>{
+                val.status=false;
+              })
               this.examlist = result.examinationPaperList;
               this.loading = false;
             }
             else {
+              result.examinationPaperList.map(val=>{
+                val.status=false;
+              })
               this.examlist = result.examinationPaperList;
               this.loading = false;
             }
@@ -323,12 +376,12 @@
       back() {
         this.message = false;
       },
-      signToggle() {
+      /*signToggle() {
         console.log(this.page)
         console.log(this.signList)
         this.signList[this.page - 1].sign = !this.signList[this.page - 1].sign;
         localStorage.setItem('signList', JSON.stringify(this.signList));
-      },
+      },*/
       next() {
         if (this.page < this.total) {
           this.page++;
@@ -361,7 +414,7 @@
   .container {
     width: @max;
     height: @max;
-    padding-top: 88px;
+    /*padding-top: 88px;*/
     box-sizing: border-box;
   }
 
@@ -409,6 +462,7 @@
 
     .content {
       padding: 0 24px;
+      width: @max;
       box-sizing: border-box;
       .subject {
         b {
@@ -421,10 +475,17 @@
         }
       }
       .result {
-        padding-top: 46px;
+        width: @max;
+        padding-top: 16px;
         box-sizing: border-box;
+        .result-item{
+          width: @max;
+          >div{
+            width:@max;
+          }
+        }
         .title {
-          .base(@answer-col-62, @answer-font-28);
+          .base(@answer-col-62, @answer-font-32);
           line-height: 56px;
         }
         .single {
@@ -444,7 +505,7 @@
             display: inline-block;
             position: relative;
             line-height: 69px;
-            .base(@answer-col-62, @answer-font-28);
+            .base(@answer-col-62, @answer-font-32);
             padding-left: 100px;
             box-sizing: border-box;
           }
@@ -485,7 +546,7 @@
             display: inline-block;
             line-height: 75px;
             position: relative;
-            .base(@answer-col-62, @answer-font-28);
+            .base(@answer-col-62, @answer-font-32);
             padding-left: 100px;
             box-sizing: border-box;
           }
@@ -515,18 +576,34 @@
 
         }
         .tip {
-          span {
+          width: @max;
+          .spans {
             font-size: 30px;
             margin-top: 46px;
-            border-left: 10px solid @theme;
-            line-height: 48px;
-            height: 48px;
-            display: block;
+            width: @max;
             color: @answer-col-62;
-            padding-left: 15px;
-            box-sizing: border-box;
-            b {
-              color: #ff3030;
+            overflow: hidden;
+            div{
+              padding-bottom: 50px;
+            }
+            span{
+              display: inline-block;
+              height: 25px;
+              border-left: 10px solid @theme;
+            }
+            em{
+              padding-left: 15px;
+              box-sizing: border-box;
+              height: 40px;
+              /*border-left: 10px solid @theme;*/
+              font-style: normal;
+            }
+            b{
+              font-weight:400;
+              color:#000;
+              height: 300px;
+              line-height: 40px;
+              word-wrap: break-word;
             }
           }
         }
