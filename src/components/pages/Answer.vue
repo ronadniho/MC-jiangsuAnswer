@@ -8,7 +8,7 @@
     <!--@child="warning"-->
     <!--/>-->
     <!--答题-->
-    <div class="container answer" v-if="layerToggle&&!message">
+    <div class="container answer" v-if="layerToggle&&!message&&!prizeStatus">
       <!--页码-->
       <div class="action flex">
         <div class="tip">
@@ -174,6 +174,27 @@
       <!--</div>-->
     </div>
 
+
+    <!--中奖信息-->
+    <div id="prize" v-if="prizeStatus">
+
+      <img src="../../assets/yxlm.png" alt="">
+      <div class="prize-message">
+        <div class="prize-title">奖学金</div>
+        <div class="prize-context">
+          <div class="mony"><b>小惊喜</b></div>
+          <div class="prize-text">
+            <p>学霸:{{user_name}}</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;恭喜获得奖学金！请于活动结束前到人教处（1017室）登记。</p>
+          </div>
+        </div>
+      </div>
+      <div class="btn">
+        <button @click="jump">返回首页</button>
+      </div>
+    </div>
+
+
     <!--loading-->
     <Loading v-if="loading"/>
     <div class="wait" v-if="wait"></div>
@@ -229,6 +250,7 @@
         btnDisabled: true,//答对当前题目才能进入下一题,false为答对状态
         CREATE_TIME: '',//每天00:00清除缓存
         wait: false,
+        prizeStatus: true,
         baseRandoms: [
           '今天的知识点有没有好好消化呢？明天也要活力满满地接受知识哦？',
           '即使学海无涯，也阻挡不了小可爱们一颗爱学习的心，对不对？',
@@ -297,12 +319,10 @@
    */
     created: function () {
       this.title = times();
-      console.log(this.$route.params)
+      // console.log(this.$route.params)
       this.user_id = this.$route.params.user_id;
       this.user_name = this.$route.params.user_name;
-      // this.integral = this.$route.query.integral;
-      // this.user_id = this.$route.params.user_id;
-      console.log('user_id:' + this.user_id)
+      // console.log('user_id:' + this.user_id)
       // this.getAnswercnt();
 
       this.getClassExamlist(this.user_id);
@@ -338,9 +358,13 @@
        }*/
     },
     methods: {
+      jump(){
+        this.$router.go(-1);
+      },
       randomToast() {
         console.log(__GlobalInfo.sessionKey.userInfo)
-        let userInfo = JSON.parse(sessionStorage.getItem(__GlobalInfo.sessionKey.userInfo));
+        // let userInfo = JSON.parse(sessionStorage.getItem(__GlobalInfo.sessionKey.userInfo));
+        let userInfo = this.getSession(__GlobalInfo.sessionKey.userInfo);
         console.log(userInfo)
         if (userInfo && userInfo.INTEGRAL >= 500 && userInfo.num) {
           var res = this.baseRandoms.concat(this.Randoms500, this.manyRandoms);
@@ -370,10 +394,10 @@
         // var self = this;
         // mui.confirm('本次答题没提交是否退出', '退出', ['是', '否'], self.alerts, 'div');
       },
-      alerts(e) {
+      /*alerts(e) {
         this.count = 1;
         !e.index && this.$router.go(-1);
-      },
+      },*/
       /*getAnswercnt() {
         var self = this;
         request.getServerData(
@@ -526,13 +550,13 @@
       },
 
       setSession(val) {
-        localStorage.setItem([this.user_id + '_everyday'], JSON.stringify(val));
+        sessionStorage.setItem([this.user_id + '_everyday'], JSON.stringify(val));
       },
       getSession(userid) {
-        return JSON.parse(localStorage.getItem([userid]));
+        return JSON.parse(sessionStorage.getItem([userid]));
       },
       removeSession(userid) {
-        return localStorage.removeItem([userid]);
+        return sessionStorage.removeItem([userid]);
       },
       answerCardToggle() {
         this.layerToggle = !this.layerToggle;
@@ -553,10 +577,10 @@
           }
           if (examlist[i].QUESTIONS_TYPE == '1') {
             if (Array.prototype.join.call(examlist[i].ANSWER, '|') !== Array.prototype.join.call(examlist[i].reference_answer, '|')) {
-              console.log(Array.prototype.join.call(examlist[i].ANSWER, '|'))
-              console.log(Array.prototype.join.call(examlist[i].reference_answer, '|'))
-              console.log(examlist[i].reference_answer)
-              console.log(examlist[i].ANSWER)
+              // console.log(Array.prototype.join.call(examlist[i].ANSWER, '|'))
+              // console.log(Array.prototype.join.call(examlist[i].reference_answer, '|'))
+              // console.log(examlist[i].reference_answer)
+              // console.log(examlist[i].ANSWER)
               break;
             }
           }
@@ -568,7 +592,7 @@
         }
         else {
           mui.alert(this.randomToast(), '', () => {
-            // this.$router.go(-1);
+            this.$router.go(-1);
           }, null, 'div');
         }
       },
@@ -914,9 +938,9 @@
             }
             b {
               font-weight: 400;
-              color: #000;
+              color: @answer-col-62;
               height: 300px;
-              line-height: 40px;
+              line-height: 50px;
               word-wrap: break-word;
             }
           }
@@ -1108,6 +1132,95 @@
     top: 0;
     bottom: 0;
     z-index: 2000;
+  }
+
+  #prize {
+    padding-top: 72px;
+    box-sizing: border-box;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: @max;
+    height: @max;
+    background: url(../../assets/prize.png) no-repeat;
+    -webkit-background-size: @max;
+    background-size: @max;
+    text-align: center;
+    img {
+      width: 345px;
+      height: 406px;
+      margin-bottom: 42px;
+    }
+    .prize-message {
+      position: relative;
+      width: 484px;
+      height: 472px;
+      border: 0;
+      border-radius: 5px; /*no*/
+      background-color: #ffe9b3;
+      padding: 7px;
+      box-sizing: border-box;
+      margin: 0 auto 70px;
+      .prize-title{
+        position: absolute;
+        z-index: 100;
+        top: -45px;
+        color:#fff1d9;
+        font-weight: 700;
+        font-size: 48px;
+        width: @max;
+        height: 73px;
+        line-height: 73px;
+        background:url(../../assets/title.png) no-repeat center center;
+        -webkit-background-size: 374px 73px;
+        background-size: 374px 73px;
+        text-align: center;
+      }
+      .prize-context {
+        border: 3px dashed #ffd092; /*no*/
+        border-radius: 5px; /*no*/
+        padding: 55px 21px 0;
+        box-sizing: border-box;
+        width:@max;
+        height: @max;
+        .mony {
+          background: url(../../assets/mony.png) no-repeat;
+          background-size: cover;
+          width: 281px;
+          height: 180px;
+          text-align: center;
+          margin: 0 auto;
+          b {
+            color: @white;
+            font-size: 38px;
+            line-height: 180px;
+          }
+
+        }
+        .prize-text{
+          p{
+            color:#ff690b;
+            font-size: 28px;
+            line-height: 58px;
+            text-align: left;
+          }
+        }
+      }
+    }
+    .btn{
+      button{
+        width: 385px;
+        height:82px;
+        background-color:#ffa23f;
+        border:0;
+        border-radius:37px;
+        color:@white;
+        font-size: 36px;
+      }
+    }
+
   }
 
   /*.modal {

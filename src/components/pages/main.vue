@@ -12,7 +12,7 @@
       <div class="action flex">
 
         <div class="user">
-          <div> 您好，{{userInfo.NAME}}</div>
+          <div class="name"> 您好，{{userInfo.NAME}}</div>
           <div class="time">{{date}}</div>
         </div>
         <div class="tabber flex">
@@ -44,17 +44,17 @@
         <div class="tab-ctx" v-if="current">
           <div class="wrapper-header flex">
             <div class="grid-header">序号</div>
-            <div class="grid-header">排名</div>
             <div class="grid-header">姓名</div>
             <div class="grid-header">处室</div>
             <div class="grid-header">积分</div>
+            <div class="grid-header">排名</div>
           </div>
           <div class="wrapper-content active flex" v-if="userRanking&&my">
-            <div class="grid-item">{{userRanking.ROWNO}}</div>
             <div class="grid-item">{{userRanking.ROWNO}}</div>
             <div class="grid-item">{{userRanking.NAME}}</div>
             <div class="grid-item">{{userRanking.ACADEMY}}</div>
             <div class="grid-item">{{userRanking.INTEGRAL}}</div>
+            <div class="grid-item">{{userRanking.ROWNO}}</div>
           </div>
           <div class="scroller-con" :style="{'height':h}">
             <scroller
@@ -72,10 +72,10 @@
                      v-for="(val,index) in rankingList"
                      :class="[val.hasClass?'active':'']">
                   <div class="grid-item">{{index+1}}</div>
-                  <div class="grid-item">{{val.ranking}}</div>
                   <div class="grid-item">{{val.NAME}}</div>
                   <div class="grid-item">{{val.ACADEMY}}</div>
                   <div class="grid-item">{{val.INTEGRAL}}</div>
+                  <div class="grid-item">{{val.ranking}}</div>
                 </div>
                 <!--<div class="wrapper-content active" v-if="userRanking">
                   <div class="grid-item">{{userRanking.ROWNO}}</div>
@@ -111,7 +111,7 @@
 
       <div class="btn-group">
         <button class="btn start" @click="goLink('start')">开始答题</button>
-        <!--<button class="btn read" @click="goLink('read')">查看题库</button>-->
+        <button class="btn read" @click="goLink('read')">查看题库</button>
       </div>
     </div>
     <!--loading-->
@@ -179,8 +179,6 @@
     beforeRouteLeave(to, from, next) {
       console.log(to.path);
       console.log(from.path);
-      console.log(this.$router);
-      console.log(history);
       var alerts = e => {
         console.log(e);
         if (!e.index) {
@@ -208,6 +206,19 @@
       //     this.$router.go(-1);
       //   }, 'div');
       // }
+      if (this.$route.params.user_id) {
+        this.user_id = this.$route.params.user_id;
+      }
+      else {
+        mui.alert('用户不存在,请联系管理员', '', '返回', () => {
+          window.opener = null;
+          window.open('', '_self');
+          window.close();
+
+          // this.$router.go(-1)
+        }, 'div');
+      }
+/*
       if (this.$route.query.user_id) {
         this.user_id = this.$route.query.user_id;
       }
@@ -220,6 +231,7 @@
           // this.$router.go(-1)
         }, 'div');
       }
+*/
 
       // this.user_id = '111111';
       this.PAGESTART = -1;
@@ -251,7 +263,7 @@
             if (result.userInfo) {
               this.userInfo = result.userInfo;
               this.user_name = result.userInfo.NAME;
-              sessionStorage.setItem(__GlobalInfo.sessionKey.userInfo,JSON.stringify(result.userInfo));
+              sessionStorage.setItem(__GlobalInfo.sessionKey.userInfo, JSON.stringify(result.userInfo));
             }
           });
       },
@@ -286,7 +298,7 @@
           this.loadList = true;
           this.rankingList = [];
           this.postList(done);
-        }, 1500)
+        }, 100)
       },
       infinite(done) {
         setTimeout(() => {
@@ -300,7 +312,7 @@
           }
           ;
           // this.postList(done);
-        }, 1500)
+        }, 100)
       },
       postList(fn) {
         this.PAGESTART++;
@@ -439,9 +451,9 @@
           });
 
         }
-        // else {
-        //   this.$router.push({path: 'pdf'});
-        // }
+        else {
+          this.$router.push({path: '/pdf'});
+        }
       }
     }
   }
@@ -487,8 +499,12 @@
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          .name{
+            line-height: 46px;
+          }
           .time {
             font-size: 34px;
+            line-height: 46px;
           }
         }
         .tabber {
@@ -519,7 +535,7 @@
       }
 
       .content {
-        height: 817px;
+        height: 717px;
         padding: 0 24px;
         box-sizing: border-box;
         .tab-ctx {
@@ -551,7 +567,7 @@
               text-align: center;
               h2 {
                 padding-top: 139px;
-                padding-bottom: 86px;
+                padding-bottom: 56px;
                 font-size: 78px;
                 color: #8b8b8b;
               }
@@ -588,16 +604,16 @@
               border-top-left-radius: 3px; /*no*/
             }
             .grid-header:nth-child(2) {
-              width: 78px;
-            }
-            .grid-header:nth-child(3) {
               width: 176.5px;
             }
-            .grid-header:nth-child(4) {
+            .grid-header:nth-child(3) {
               width: 246.5px;
             }
-            .grid-header:last-child {
+            .grid-header:nth-child(4) {
               width: 118px;
+            }
+            .grid-header:last-child {
+              width: 78px;
               border-top-right-radius: 3px; /*no*/
             }
           }
@@ -635,16 +651,16 @@
               width: 78px;
             }
             .grid-item:nth-child(2) {
-              width: 78px;
-            }
-            .grid-item:nth-child(3) {
               width: 176.5px;
             }
-            .grid-item:nth-child(4) {
+            .grid-item:nth-child(3) {
               width: 246.5px;
             }
-            .grid-item:last-child {
+            .grid-item:nth-child(4) {
               width: 118px;
+            }
+            .grid-item:last-child {
+              width: 78px;
             }
           }
           /*.wrapper-content {

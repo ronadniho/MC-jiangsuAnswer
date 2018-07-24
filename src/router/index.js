@@ -66,7 +66,12 @@ export const router = new Router({
   routes: [
     {
       path: '/',
-      redirect: '/main'   //重定向
+      redirect: '/welcome'   //重定向
+    },
+    {
+      path: '/welcome',
+      name: 'Welcome',
+      component: resolve => require(['@/components/pages/Welcome'], resolve),
     },
     // {
     //   path: '/login',
@@ -79,15 +84,13 @@ export const router = new Router({
       name: 'Pdf',
       component: resolve => require(['@/components/pages/Pdf'], resolve),
     },
-/*
     {
       path: '/readAnswer',
       name: 'ReadAnswer',
       component: resolve => require(['@/components/pages/ReadAnswer'], resolve),
     },
-*/
     {
-      path: '/main',
+      path: '/main/:user_id',
       name: 'Main',
       component: resolve => require(['@/components/pages/Main'], resolve),
     },

@@ -127,7 +127,7 @@
           this.loadList = true;
           this.integralInfo = [];
           this.postList(done);
-        }, 1500)
+        }, 100)
       },
       infinite(done) {
         setTimeout(() => {
@@ -140,7 +140,7 @@
             done(true);
           }
           // this.postList(done);
-        }, 1500)
+        }, 100)
       },
       postList(fn) {
         this.PAGESTART++;
