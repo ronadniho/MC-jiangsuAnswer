@@ -20,7 +20,9 @@
     height: @max;
     width: @max;
   }
-
+  body{
+    padding-bottom: constant(safe-area-inset-bottom);
+  }
   ul, ol, dl, dd, p, h1, h2, h3, h4, h5, h6 {
     list-style: none;
     padding: 0;

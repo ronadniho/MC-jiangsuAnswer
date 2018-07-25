@@ -37,6 +37,7 @@
 </template>
 
 <script>
+  import {config} from '../../../config/config'
   export default {
     name: "Pdf",
     data() {

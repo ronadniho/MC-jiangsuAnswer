@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="[prizeStatus?'add':'']">
     <!--<Header-->
     <!--:title="title"-->
     <!--:href="href"-->
@@ -106,7 +106,6 @@
                     <span></span>
                     <em>查看提示</em>
                   </div>
-
                   <b v-if="item.status">{{item.PROMPT}}</b>
                 </div>
 
@@ -147,7 +146,7 @@
 
           <dd class="lt" v-for="(item,index) in examlist" v-if="item.QUESTIONS_TYPE==0">
             <span @click="guide(index)" :data-index="index+1"
-                  :class="[(item.ANSWER.length||item.ANSWER!='')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
+                  :class="[(item.is_true!='1')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
           </dd>
         </dl>
       </div>
@@ -156,7 +155,7 @@
           <dt>多选题</dt>
           <dd class="lt" v-for="(item,index) in examlist" v-if="item.QUESTIONS_TYPE==1">
             <span @click="guide(index)" :data-index="index+1"
-                  :class="[(item.ANSWER.length||item.ANSWER!='')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
+                  :class="[(item.is_true!='1')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
           </dd>
         </dl>
       </div>
@@ -165,7 +164,7 @@
           <dt>判断题</dt>
           <dd class="lt" v-for="(item,index) in examlist" v-if="item.QUESTIONS_TYPE==2">
             <span @click="guide(index)" :data-index="index+1"
-                  :class="[(item.ANSWER.length||item.ANSWER!='')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
+                  :class="[(item.is_true!='1')?'sel':'', item.sign?'sign':'']">{{index+1}}</span>
           </dd>
         </dl>
       </div>
@@ -184,8 +183,8 @@
         <div class="prize-context">
           <div class="mony"><b>小惊喜</b></div>
           <div class="prize-text">
-            <p>学霸:{{user_name}}</p>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;恭喜获得奖学金！请于活动结束前到人教处（1017室）登记。</p>
+            <p>学霸{{user_name}}</p>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;恭喜获得奖学金！请于活动结束前到人教处（1017室）登记。</p>
           </div>
         </div>
       </div>
@@ -241,6 +240,7 @@
         loading: true,//加载动画
         result: false,//得分页状态
         message: '',
+        rewardInfo: {},
         endTime: '',
         startTime: '',
         state: false,
@@ -250,7 +250,7 @@
         btnDisabled: true,//答对当前题目才能进入下一题,false为答对状态
         CREATE_TIME: '',//每天00:00清除缓存
         wait: false,
-        prizeStatus: true,
+        prizeStatus: false,
         baseRandoms: [
           '今天的知识点有没有好好消化呢？明天也要活力满满地接受知识哦？',
           '即使学海无涯，也阻挡不了小可爱们一颗爱学习的心，对不对？',
@@ -358,7 +358,7 @@
        }*/
     },
     methods: {
-      jump(){
+      jump() {
         this.$router.go(-1);
       },
       randomToast() {
@@ -428,6 +428,9 @@
           true,
           (result) => {
             console.log(result)
+            if (result.rewardInfo) {
+              this.rewardInfo = result.rewardInfo;
+            }
             if (result.examinationPaperList.length) {
               result.examinationPaperList.map(val => {
                 val.status = false;
@@ -591,9 +594,17 @@
           mui.alert('您还有未答完的题目', '', '返回', null, 'div');
         }
         else {
-          mui.alert(this.randomToast(), '', () => {
-            this.$router.go(-1);
-          }, null, 'div');
+          mui.alert(this.randomToast(), '', '确定', () => {
+            console.log(this.rewardInfo)
+            if (this.rewardInfo.ID) {//用户抽过奖了
+              //跳回首页
+              this.$router.go(-1);
+            }
+            else {//抽奖
+              this.draw();
+            }
+
+          }, 'div');
         }
       },
       end() {
@@ -603,6 +614,25 @@
         else {//最后一题没有答对先提交，在判断是否所有题目都答对了
           this.filterSubmit(true);
         }
+      },
+      draw() {//TODO: 抽奖
+        console.log(this.user_id)
+        request.getServerData(
+          {
+            user_id: this.user_id
+          },
+          "onlineExamination.action.examinationAction[reward]",
+          true,
+          result => {
+            console.log(result);
+            if (result.is_reward == '0') {//抽奖结果，0表示中奖，1表示未中奖
+              this.prizeStatus = true;
+            }
+            else {
+              this.$router.go(-1);
+            }
+          }
+        )
       },
       submit(arg, type, callback) {
         console.log(arg)
@@ -696,7 +726,7 @@
             this.submit(this.examlist[this.page - 1], 0, callback);
           }
           else {//选错了
-            mui.alert('回答错误，答题正确后方可进入下一题', '', '返回', null, 'div');
+            mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
             this.btnDisabled = true;
           }
         }
@@ -714,7 +744,7 @@
             this.submit(this.examlist[this.page - 1], 1, callback);
           }
           else {//选错了
-            mui.alert('回答错误，答题正确后方可进入下一题', '', '返回', null, 'div');
+            mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
             this.btnDisabled = true;
           }
         }
@@ -738,7 +768,9 @@
 
 <style scoped lang="less">
   @import '../../variable';
-
+  .add{
+    height: 100%;
+  }
   .container {
     width: @max;
     height: @max;
@@ -1137,16 +1169,17 @@
   #prize {
     padding-top: 72px;
     box-sizing: border-box;
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
+    /*position: fixed;*/
+    /*left: 0;*/
+    /*right: 0;*/
+    /*top: 0;*/
+    /*bottom: 0;*/
+
     width: @max;
     height: @max;
     background: url(../../assets/prize.png) no-repeat;
-    -webkit-background-size: @max;
-    background-size: @max;
+    -webkit-background-size: cover;
+    background-size: cover;
     text-align: center;
     img {
       width: 345px;
@@ -1163,17 +1196,17 @@
       padding: 7px;
       box-sizing: border-box;
       margin: 0 auto 70px;
-      .prize-title{
+      .prize-title {
         position: absolute;
         z-index: 100;
         top: -45px;
-        color:#fff1d9;
+        color: #fff1d9;
         font-weight: 700;
         font-size: 48px;
         width: @max;
         height: 73px;
         line-height: 73px;
-        background:url(../../assets/title.png) no-repeat center center;
+        background: url(../../assets/title.png) no-repeat center center;
         -webkit-background-size: 374px 73px;
         background-size: 374px 73px;
         text-align: center;
@@ -1181,9 +1214,9 @@
       .prize-context {
         border: 3px dashed #ffd092; /*no*/
         border-radius: 5px; /*no*/
-        padding: 55px 21px 0;
+        padding: 55px 18px 0;
         box-sizing: border-box;
-        width:@max;
+        width: @max;
         height: @max;
         .mony {
           background: url(../../assets/mony.png) no-repeat;
@@ -1199,9 +1232,9 @@
           }
 
         }
-        .prize-text{
-          p{
-            color:#ff690b;
+        .prize-text {
+          p {
+            color: #ff690b;
             font-size: 28px;
             line-height: 58px;
             text-align: left;
@@ -1209,14 +1242,14 @@
         }
       }
     }
-    .btn{
-      button{
+    .btn {
+      button {
         width: 385px;
-        height:82px;
-        background-color:#ffa23f;
-        border:0;
-        border-radius:37px;
-        color:@white;
+        height: 82px;
+        background-color: #ffa23f;
+        border: 0;
+        border-radius: 37px;
+        color: @white;
         font-size: 36px;
       }
     }

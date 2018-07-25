@@ -7,6 +7,7 @@
         <div class="grid-header">姓名</div>
         <div class="grid-header">日期</div>
         <div class="grid-header">积分</div>
+        <div class="grid-header">是否中奖</div>
       </div>
       <!--<div class="wrapper-content active flex" v-if="userRanking&&my">-->
       <!--<div class="grid-item">{{userRanking.ROWNO}}</div>-->
@@ -32,6 +33,7 @@
               <div class="grid-item">{{val.USER_NAME}}</div>
               <div class="grid-item">{{val.QUESTION_TIME}}</div>
               <div class="grid-item">{{val.DAILYINTEGRAL}}</div>
+              <div class="grid-item">{{val.IS_REWARD=='0'?'中奖':''}}</div>
             </div>
 
           </div>
@@ -118,7 +120,7 @@
       // this.h = ((this.PAGECOUNT * this.rankingItemH) / 2 / htmlFS) + 'rem';
       // $('.scroller-con').css('height', this.h)
       console.log($('._v-container'))
-      $('._v-container').css('paddingTop','33px')
+      $('._v-container').css('paddingTop', '33px')
     },
     methods: {
       refresh(done) {
@@ -159,7 +161,7 @@
             if (result.integralInfo) {
               if (this.PAGESTART) {
                 if (result.integralInfo.length) {//如果是数组//一条以上是数组
-                  result.integralInfo.forEach((val)=>{
+                  result.integralInfo.forEach((val) => {
                     this.integralInfo.push(val);
                   })
                 }
@@ -172,8 +174,8 @@
                 if (result.integralInfo.length) {
                   this.integralInfo = result.integralInfo;
                 }
-                else{
-                  this.integralInfo=[];
+                else {
+                  this.integralInfo = [];
                   this.integralInfo.push(result.integralInfo);
                 }
               }
@@ -196,9 +198,9 @@
 <style scoped lang="less">
   @import '../../variable';
 
- /* ._v-container {
-    top: 33px; !*no*!
-  }*/
+  /* ._v-container {
+     top: 33px; !*no*!
+   }*/
 
   .content {
     width: @max;
@@ -251,10 +253,14 @@
           width: 148px;
         }
         .grid-header:nth-child(3) {
-          width: 313px;
+          width: 203px;
+        }
+        .grid-header:nth-child(4) {
+          width: 138px;
+          border-top-right-radius: 3px; /*no*/
         }
         .grid-header:last-child {
-          width: 138px;
+          width: 110px;
           border-top-right-radius: 3px; /*no*/
         }
       }
@@ -288,6 +294,18 @@
           text-overflow: ellipsis;
           box-sizing: border-box;
         }
+        /*.grid-item:first-child {*/
+          /*width: 98px;*/
+        /*}*/
+        /*.grid-item:nth-child(2) {*/
+          /*width: 148px;*/
+        /*}*/
+        /*.grid-item:nth-child(3) {*/
+          /*width: 313px;*/
+        /*}*/
+        /*.grid-item:last-child {*/
+          /*width: 138px;*/
+        /*}*/
         .grid-item:first-child {
           width: 98px;
         }
@@ -295,10 +313,13 @@
           width: 148px;
         }
         .grid-item:nth-child(3) {
-          width: 313px;
+          width: 203px;
+        }
+        .grid-item:nth-child(4) {
+          width: 138px;
         }
         .grid-item:last-child {
-          width: 138px;
+          width: 110px;
         }
       }
       /*.wrapper-content {
