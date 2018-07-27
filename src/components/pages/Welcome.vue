@@ -118,11 +118,19 @@
           background-color: @theme;
           color: @white;
           border: 0;
-          border-radius: 40px;
-          width: 266px;
-          height: 80px;
-          line-height: 80px;
-          margin: 0 18px;
+          border-radius: 35px;
+          width: 246px;
+          height: 70px;
+          line-height: 70px;
+          padding: 0;
+        }
+        button:first-child{
+          margin-right:18px;
+
+        }
+        button:last-child{
+          margin-left:18px;
+
         }
       }
     }

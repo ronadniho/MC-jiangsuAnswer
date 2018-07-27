@@ -50,7 +50,7 @@
             <div class="grid-header">排名</div>
           </div>
           <div class="wrapper-content active flex" v-if="userRanking&&my">
-            <div class="grid-item">{{userRanking.ROWNO}}</div>
+            <div class="grid-item">{{userRanking.ROWNUM}}</div>
             <div class="grid-item">{{userRanking.NAME}}</div>
             <div class="grid-item">{{userRanking.ACADEMY}}</div>
             <div class="grid-item">{{userRanking.INTEGRAL}}</div>
@@ -76,6 +76,7 @@
                   <div class="grid-item">{{val.ACADEMY}}</div>
                   <div class="grid-item">{{val.INTEGRAL}}</div>
                   <div class="grid-item">{{val.ranking}}</div>
+                  <!--<div class="grid-item">{{val.ROWNUM}}</div>-->
                 </div>
                 <!--<div class="wrapper-content active" v-if="userRanking">
                   <div class="grid-item">{{userRanking.ROWNO}}</div>
@@ -218,20 +219,20 @@
           // this.$router.go(-1)
         }, 'div');
       }
-/*
-      if (this.$route.query.user_id) {
-        this.user_id = this.$route.query.user_id;
-      }
-      else {
-        mui.alert('用户不存在,请联系管理员', '', '返回', () => {
-          window.opener = null;
-          window.open('', '_self');
-          window.close();
+      /*
+            if (this.$route.query.user_id) {
+              this.user_id = this.$route.query.user_id;
+            }
+            else {
+              mui.alert('用户不存在,请联系管理员', '', '返回', () => {
+                window.opener = null;
+                window.open('', '_self');
+                window.close();
 
-          // this.$router.go(-1)
-        }, 'div');
-      }
-*/
+                // this.$router.go(-1)
+              }, 'div');
+            }
+      */
 
       // this.user_id = '111111';
       this.PAGESTART = -1;
@@ -298,7 +299,7 @@
           this.loadList = true;
           this.rankingList = [];
           this.postList(done);
-        }, 100)
+        }, 500)
       },
       infinite(done) {
         setTimeout(() => {
@@ -312,7 +313,7 @@
           }
           ;
           // this.postList(done);
-        }, 100)
+        }, 500)
       },
       postList(fn) {
         this.PAGESTART++;
@@ -342,6 +343,31 @@
                         rankingList[i].hasClass = 0;
                       }
                     }
+
+                    //INTEGRAL 积分
+                    //ranking 排名
+                    var lastInfo = this.rankingList[this.rankingList.length - 1];
+                    console.log(lastInfo)
+                    if (i) {
+                      if (rankingList[i].INTEGRAL == rankingList[i - 1].INTEGRAL) {
+                        rankingList[i].ranking = rankingList[i - 1].ranking;
+                      }
+                      else {
+                        rankingList[i].ranking = (rankingList[i - 1].ranking) + 1;
+                      }
+                    }
+                    else {//第一次
+                      if(lastInfo.INTEGRAL>rankingList[i].INTEGRAL){
+                        rankingList[i].ranking = i + 1+lastInfo.ranking;
+                      }
+                      else if(lastInfo.INTEGRAL<rankingList[i].INTEGRAL){
+                        rankingList[i].ranking = i +lastInfo.ranking;
+                      }
+                      else{
+                        rankingList[i].ranking = lastInfo.ranking;
+                      }
+                    }
+
                     this.rankingList.push(rankingList[i]);
                   }
                 }
@@ -358,6 +384,8 @@
                   }
                 }
               }
+
+
               else {
                 this.userRanking = result.userRanking;
                 for (var i = 0, rankingList = result.rankingList; i < rankingList.length; i++) {
@@ -384,12 +412,26 @@
 
                   }
                   else {
+
+                    if (i) {
+                      if (rankingList[i].INTEGRAL == rankingList[i - 1].INTEGRAL) {
+                        rankingList[i].ranking = rankingList[i - 1].ranking;
+                      }
+                      else {
+                        rankingList[i].ranking = (rankingList[i - 1].ranking) + 1;
+                      }
+                    }
+                    else {
+                      rankingList[i].ranking = i + 1;
+                    }
+
+
                     this.my = false;
                   }
                 }
                 this.rankingList = rankingList;
               }
-              for (var i = 0, rankingList = this.rankingList; i < rankingList.length; i++) {
+              /*for (var i = 0, rankingList = this.rankingList; i < rankingList.length; i++) {
                 if (result.userRanking) {
                   if (rankingList[i].ID == result.userRanking.ID) {
                     rankingList[i].hasClass = 1;
@@ -413,7 +455,7 @@
                 else {
                   this.my = false;
                 }
-              }
+              }*/
               fn();
             }
             else {
@@ -480,6 +522,7 @@
 
   //style
   .main {
+    width: 100vw;
     height: @max;
     .main-content {
       /*padding-top: 88px;*/
@@ -499,7 +542,7 @@
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          .name{
+          .name {
             line-height: 46px;
           }
           .time {

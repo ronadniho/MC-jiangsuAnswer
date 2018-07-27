@@ -383,7 +383,7 @@
           console.log(res)
         }
         let idx = Math.floor(Math.random() * res.length);
-        return res[idx];
+        return '恭喜你，完成今天的学习任务！' + res[idx];
       },
       show(val) {
         console.log(val);
@@ -591,9 +591,11 @@
         console.log('i:' + i)
         console.log('i:' + examlist.length)
         if (i != examlist.length) {
+          this.loading = false;
           mui.alert('您还有未答完的题目', '', '返回', null, 'div');
         }
         else {
+          this.loading = false;
           mui.alert(this.randomToast(), '', '确定', () => {
             console.log(this.rewardInfo)
             if (this.rewardInfo.ID) {//用户抽过奖了
@@ -608,6 +610,7 @@
         }
       },
       end() {
+        this.loading = true;
         if (this.examlist[this.page - 1].is_true == 0) {//最后一题答对状态不需要再次提交
           this.checkTotalExamIsTrue();
         }
@@ -636,7 +639,7 @@
       },
       submit(arg, type, callback) {
         console.log(arg)
-        if (type) {
+        if (type) {//1为多选题
           if (arg.ANSWER.length > 1) {
             // arg.ANSWER = Array.prototype.join.call(arg.ANSWER, '|');
             var answer = Array.prototype.join.call(arg.ANSWER, '|');
@@ -653,7 +656,7 @@
         console.log(arg.ANSWER)
         let requestObj = {
           questions_id: arg.ID,
-          pitch_on_option: answer,
+          pitch_on_option: type?answer:arg.ANSWER,
           answer_results: arg.is_true,
           VALUE: arg.VALUE,
           user_id: this.user_id,
@@ -698,17 +701,20 @@
       },
       next() {
         if (this.page < this.totalPage) {
+          this.loading = true;
           console.log(this.examlist[this.page - 1].is_true == '0')
-          if (this.examlist[this.page - 1].is_true == '0') {
+          if (this.examlist[this.page - 1].is_true == '0') {//以答
             this.btnDisabled = false;
             this.page++;
+            this.loading = false;
           }
-          else {
-            console.log(this.examlist[this.page - 1])
+          else {//未答
+            console.log(this.examlist[this.page - 1]);
             this.filterSubmit();
           }
           // this.btnDisabled = !this.examlist[this.page - 1].DISABLED;
           this.setSession(this.examlist);
+
         }
       },
       filterSubmit(arg) {
@@ -720,12 +726,15 @@
                 this.checkTotalExamIsTrue();
               }
               else {
+                this.loading = false;
                 this.page++;
               }
             }
+            this.examlist[this.page - 1].is_true = '0';
             this.submit(this.examlist[this.page - 1], 0, callback);
           }
           else {//选错了
+            this.loading = false;
             mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
             this.btnDisabled = true;
           }
@@ -738,12 +747,15 @@
                 this.checkTotalExamIsTrue();
               }
               else {
+                this.loading = false;
                 this.page++;
               }
-            }
+            };
+            this.examlist[this.page - 1].is_true = '0';
             this.submit(this.examlist[this.page - 1], 1, callback);
           }
           else {//选错了
+            this.loading = false;
             mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
             this.btnDisabled = true;
           }
@@ -768,9 +780,11 @@
 
 <style scoped lang="less">
   @import '../../variable';
-  .add{
+
+  .add {
     height: 100%;
   }
+
   .container {
     width: @max;
     height: @max;
@@ -949,12 +963,12 @@
           width: @max;
           .spans {
             font-size: 30px;
-            margin-top: 46px;
+            margin-top: 15px;
             width: @max;
             color: @answer-col-62;
             overflow: hidden;
             div {
-              padding-bottom: 50px;
+              padding-bottom: 13px;
             }
             span {
               display: inline-block;

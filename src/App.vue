@@ -18,7 +18,8 @@
     padding: 0;
     margin: 0;
     height: @max;
-    width: @max;
+   /* width: @max;*/
+    width: 100vw;
   }
   body{
     padding-bottom: constant(safe-area-inset-bottom);
