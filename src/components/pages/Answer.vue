@@ -580,10 +580,6 @@
           }
           if (examlist[i].QUESTIONS_TYPE == '1') {
             if (Array.prototype.join.call(examlist[i].ANSWER, '|') !== Array.prototype.join.call(examlist[i].reference_answer, '|')) {
-              // console.log(Array.prototype.join.call(examlist[i].ANSWER, '|'))
-              // console.log(Array.prototype.join.call(examlist[i].reference_answer, '|'))
-              // console.log(examlist[i].reference_answer)
-              // console.log(examlist[i].ANSWER)
               break;
             }
           }
@@ -591,27 +587,31 @@
         console.log('i:' + i)
         console.log('i:' + examlist.length)
         if (i != examlist.length) {
-          this.loading = false;
-          mui.alert('您还有未答完的题目', '', '返回', null, 'div');
+          setTimeout(() => {
+            this.loading = false;
+            mui.alert('您还有未答完的题目', '', '返回', null, 'div');
+          }, 500);
         }
         else {
-          this.loading = false;
-          mui.alert(this.randomToast(), '', '确定', () => {
-            console.log(this.rewardInfo)
-            if (this.rewardInfo.ID) {//用户抽过奖了
-              //跳回首页
-              this.$router.go(-1);
-            }
-            else {//抽奖
-              this.draw();
-            }
+          setTimeout(() => {
+            this.loading = false;
+            mui.alert(this.randomToast(), '', '确定', () => {
+              console.log(this.rewardInfo)
+              if (this.rewardInfo.ID) {//用户抽过奖了
+                //跳回首页
+                this.$router.go(-1);
+              }
+              else {//抽奖
+                this.draw();
+              }
 
-          }, 'div');
+            }, 'div');
+          }, 500);
         }
       },
       end() {
         this.loading = true;
-        if (this.examlist[this.page - 1].is_true == 0) {//最后一题答对状态不需要再次提交
+        if (this.examlist[this.page - 1].is_true == '0') {//最后一题答对状态不需要再次提交
           this.checkTotalExamIsTrue();
         }
         else {//最后一题没有答对先提交，在判断是否所有题目都答对了
@@ -656,7 +656,7 @@
         console.log(arg.ANSWER)
         let requestObj = {
           questions_id: arg.ID,
-          pitch_on_option: type?answer:arg.ANSWER,
+          pitch_on_option: type ? answer : arg.ANSWER,
           answer_results: arg.is_true,
           VALUE: arg.VALUE,
           user_id: this.user_id,
@@ -669,9 +669,11 @@
           true,
           (result) => {
             console.log(result)
-            // this.wait = false;
             if (result == '请求失败') {
-              mui.alert('服务器出错', '', '返回', self.back, 'div')
+              setTimeout(() => {
+                this.loading = false;
+                mui.alert('服务器出错', '', '返回', self.back, 'div');
+              }, 500);
             }
             else {
               var res = JSON.stringify(result);
@@ -681,89 +683,90 @@
               if (callback) {
                 callback();
               }
-              // this.$router.push({
-              //   path: 'answerResult',
-              //   query: {res}
-              // })
+              else {
+                setTimeout(() => {
+                  this.loading = false;
+                }, 500);
+              }
             }
-
-            // this.$router.go(-1);
-            // var res = result;
-            // localStorage.removeItem([this.classid]);
-            // res.state = this.state;
-            // var resStr = JSON.stringify(res)
-            // this.$router.push({
-            //   path: 'answerResult',
-            //   query: {resStr}
-            // });
-          })
-
+          });
       },
       next() {
         if (this.page < this.totalPage) {
           this.loading = true;
-          console.log(this.examlist[this.page - 1].is_true == '0')
-          if (this.examlist[this.page - 1].is_true == '0') {//以答
-            this.btnDisabled = false;
+          if (this.examlist[this.page - 1].is_true == '0') {//已答
+            // this.btnDisabled = false;
             this.page++;
-            this.loading = false;
+            setTimeout(() => {
+              this.loading = false;
+            }, 500);
           }
           else {//未答
-            console.log(this.examlist[this.page - 1]);
             this.filterSubmit();
           }
           // this.btnDisabled = !this.examlist[this.page - 1].DISABLED;
-          this.setSession(this.examlist);
+          // this.setSession(this.examlist);
 
         }
       },
-      filterSubmit(arg) {
-        if (this.examlist[this.page - 1].QUESTIONS_TYPE != 1) {//单选题或判断题
-          if (this.examlist[this.page - 1].ANSWER == this.examlist[this.page - 1].reference_answer) {//选对了
-            let callback = () => {
-              this.examlist[this.page - 1].is_true = '0';
-              if (arg) {
-                this.checkTotalExamIsTrue();
-              }
-              else {
-                this.loading = false;
-                this.page++;
-              }
-            }
-            this.examlist[this.page - 1].is_true = '0';
-            this.submit(this.examlist[this.page - 1], 0, callback);
-          }
-          else {//选错了
+      filterSubmit(arg) {//处理数据在提交答题
+        var errCallback = () => {//题目答错的回调
+          setTimeout(() => {
             this.loading = false;
             mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
-            this.btnDisabled = true;
+          }, 500);
+          // this.btnDisabled = true;
+        };
+        var submitCallback = () => {//提交题目成功的回调
+          this.examlist[this.page - 1].is_true = '0';
+          if (arg) {//点击的是完成按钮
+            this.checkTotalExamIsTrue();
+          }
+          else {//点击的是下一题按钮
+            setTimeout(() => {
+              this.loading = false;
+            }, 500);
+            this.page++;
+          }
+        };
+        if (this.examlist[this.page - 1].QUESTIONS_TYPE != 1) {//单选题或判断题
+          if (this.examlist[this.page - 1].ANSWER == this.examlist[this.page - 1].reference_answer) {//选对了
+            this.examlist[this.page - 1].is_true = '0';
+            this.submit(this.examlist[this.page - 1], 0, submitCallback);
+          }
+          else {//选错了
+            errCallback();
           }
         }
         else {//多选题
           if (JSON.stringify(Array.prototype.sort.call(this.examlist[this.page - 1].ANSWER)) == JSON.stringify(Array.prototype.sort.call(this.examlist[this.page - 1].reference_answer))) {//选对了
-            let callback = () => {
-              this.examlist[this.page - 1].is_true = '0';
-              if (arg) {
-                this.checkTotalExamIsTrue();
-              }
-              else {
-                this.loading = false;
-                this.page++;
-              }
-            };
+            /* var callback = () => {
+               this.examlist[this.page - 1].is_true = '0';
+               if (arg) {
+                 this.checkTotalExamIsTrue();
+               }
+               else {
+                 setTimeout(()=>{
+                   this.loading = false;
+                 },500);
+                 this.page++;
+               }
+             };*/
             this.examlist[this.page - 1].is_true = '0';
-            this.submit(this.examlist[this.page - 1], 1, callback);
+            this.submit(this.examlist[this.page - 1], 1, submitCallback);
           }
           else {//选错了
-            this.loading = false;
-            mui.alert('真遗憾，答错了！没关系，可查看提示后再回答哦，加油！', '', '返回', null, 'div');
-            this.btnDisabled = true;
+            errCallback();
           }
         }
       },
       prev() {
         if (this.page > 1) {
+          this.loading = true;
           this.page--;
+          setTimeout(() => {
+            this.loading = false;
+          }, 500);
           if (this.examlist[this.page - 1].is_true == '0') {
             this.btnDisabled = false;
           }
@@ -771,7 +774,7 @@
             this.btnDisabled = true;
           }
           // this.btnDisabled = !this.examlist[this.page - 1].DISABLED;
-          this.setSession(this.examlist);
+          // this.setSession(this.examlist);
         }
       },
     }

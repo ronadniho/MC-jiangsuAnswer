@@ -152,7 +152,7 @@
         userInfo: {},
         user_name: '',
         user_id: '',
-        loading: false,
+        loading: true,
         rankingList: [],//排行集合
         userRanking: {},//个人排名
         rankingItemH: 68,//每条高度
@@ -201,6 +201,7 @@
       }
     },
     created: function () {
+
       this.date = times();
       // if(!this.$route.query.user_id){
       //   mui.alert('服务器繁忙', '', '返回', ()=>{
@@ -265,6 +266,7 @@
               this.userInfo = result.userInfo;
               this.user_name = result.userInfo.NAME;
               sessionStorage.setItem(__GlobalInfo.sessionKey.userInfo, JSON.stringify(result.userInfo));
+              this.loading = false;
             }
           });
       },
@@ -295,14 +297,16 @@
       },
       refresh(done) {
         setTimeout(() => {
+          this.loading = true;
           this.PAGESTART = -1;
           this.loadList = true;
           this.rankingList = [];
           this.postList(done);
-        }, 500)
+        }, 500);
       },
       infinite(done) {
         setTimeout(() => {
+          this.loading = true;
           console.log('加载')
 
           if (this.loadList) {
@@ -310,6 +314,7 @@
           }
           else {
             done(true);
+            this.loading = false;
           }
           ;
           // this.postList(done);
@@ -431,6 +436,7 @@
                 }
                 this.rankingList = rankingList;
               }
+              this.loading = false;
               /*for (var i = 0, rankingList = this.rankingList; i < rankingList.length; i++) {
                 if (result.userRanking) {
                   if (rankingList[i].ID == result.userRanking.ID) {
@@ -461,6 +467,7 @@
             else {
               this.my = false;
               this.loadList = false;
+              this.loading = false;
               fn(true);
             }
 
